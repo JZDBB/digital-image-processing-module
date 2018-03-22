@@ -9,8 +9,11 @@ import cv2
 import numpy as np
 MIN_MATCH_COUNT = 4
 
-imgname1 = "box.jpg"
-imgname2 = "box_in_scene.jpg"
+def is_in_box()
+
+
+imgname1 = "temple.jpg"
+imgname2 = "test.jpg"
 
 ## (1) prepare data
 img1 = cv2.imread(imgname1)
@@ -41,7 +44,7 @@ canvas = img2.copy()
 
 ## (7) find homography matrix
 ## 当有足够的健壮匹配点对（至少4个）时
-if len(good)>MIN_MATCH_COUNT:
+while len(good)>MIN_MATCH_COUNT:
     ## 从匹配中提取出对应点对
     ## (queryIndex for the small object, trainIndex for the scene )
     src_pts = np.float32([ kpts1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
@@ -55,9 +58,17 @@ if len(good)>MIN_MATCH_COUNT:
     pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
     dst = cv2.perspectiveTransform(pts,M)
     ## 绘制边框
-    cv2.polylines(canvas,[np.int32(dst)],True,(0,255,0),3, cv2.LINE_AA)
-else:
-    print( "Not enough matches are found - {}/{}".format(len(good),MIN_MATCH_COUNT))
+    # cv2.polylines(canvas,[np.int32(dst)],True,(0,255,0),3, cv2.LINE_AA)
+    i = 0
+    while is_in_box(kpts2[i], dst)
+
+
+
+    matches = matcher.knnMatch(descs1, descs2, 2)
+    # Sort by their distance.
+    matches = sorted(matches, key=lambda x: x[0].distance)
+    ## (6) Ratio test, to get good matches.
+    good = [m1 for (m1, m2) in matches if m1.distance < 0.7 * m2.distance]
 
 
 ## (8) drawMatches

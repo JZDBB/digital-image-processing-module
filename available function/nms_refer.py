@@ -71,8 +71,8 @@ def nms(bounding_boxes, confidence_score, threshold):
 image_name = 'nms.jpg'
 
 # Bounding boxes
-bounding_boxes = [(187, 82, 337, 317), (150, 67, 305, 282), (246, 121, 368, 304)]
-confidence_score = [0.9, 0.75, 0.8]
+bounding_boxes = [(187, 82, 337, 317), (150, 67, 305, 282), (246, 121, 368, 304), (10, 30, 20, 50)]
+confidence_score = [0.9, 0.75, 0.8, 0.8]
 
 # Read image
 image = cv2.imread(image_name)
