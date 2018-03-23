@@ -7,6 +7,7 @@
 
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 MIN_MATCH_COUNT = 4
 
 def is_in_box(axis, box):
@@ -66,16 +67,19 @@ while len(good)>MIN_MATCH_COUNT:
     dst = cv2.perspectiveTransform(pts,M)
     ## 绘制边框
     # cv2.polylines(canvas,[np.int32(dst)],True,(0,255,0),3, cv2.LINE_AA)
-    i = 0
-    while kpts2[i]:
-        if is_in_box(kpts2[i], dst):
-            del kpts2[i]
-            descs2 = np.delete(descs2, i, 0)
-            continue
-        i = i + 1
+    # i = 0
+    # while kpts2[i]:
+    #     if is_in_box(kpts2[i], dst):
+    #         del kpts2[i]
+    #         descs2 = np.delete(descs2, i, 0)
+    #         continue
+    #     i = i + 1
 
-
-
+    a = np.array([[[dst[0][0][0], dst[0][0][1]], [dst[2][0][0] + w, dst[0][0][1]], [dst[2][0][0] + w, dst[2][0][1] + h], [dst[0][0][0], dst[2][0][1] + h]]], dtype=np.int32)
+    cv2.fillPoly(gray2, a, 255)
+    plt.imshow(gray2, cmap='gray')
+    plt.show()
+    kpts2, descs2 = sift.detectAndCompute(gray2, None)
     matches = matcher.knnMatch(descs1, descs2, 2)
     # Sort by their distance.
     matches = sorted(matches, key=lambda x: x[0].distance)
