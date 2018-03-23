@@ -1,0 +1,2 @@
+template1.jpg 396 202 387 620
+template2.jpg 523 235 540 652

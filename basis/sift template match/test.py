@@ -8,7 +8,7 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
-MIN_MATCH_COUNT = 4
+MIN_MATCH_COUNT = 15
 
 def is_in_box(axis, box):
     flag = False
@@ -20,8 +20,8 @@ def is_in_box(axis, box):
             flag = True
     return flag
 
-imgname1 = "temple.jpg"
-imgname2 = "test.jpg"
+imgname1 = "template1.jpg"
+imgname2 = "test1.jpg"
 
 ## (1) prepare data
 img1 = cv2.imread(imgname1)
@@ -47,12 +47,13 @@ matches = sorted(matches, key = lambda x:x[0].distance)
 
 ## (6) Ratio test, to get good matches.
 good = [m1 for (m1, m2) in matches if m1.distance < 0.7 * m2.distance]
+print(len(good))
 
 canvas = img2.copy()
 
 ## (7) find homography matrix
 ## 当有足够的健壮匹配点对（至少4个）时
-while len(good)>MIN_MATCH_COUNT:
+if len(good)>MIN_MATCH_COUNT:
     ## 从匹配中提取出对应点对
     ## (queryIndex for the small object, trainIndex for the scene )
     src_pts = np.float32([ kpts1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
@@ -66,7 +67,7 @@ while len(good)>MIN_MATCH_COUNT:
     pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
     dst = cv2.perspectiveTransform(pts,M)
     ## 绘制边框
-    # cv2.polylines(canvas,[np.int32(dst)],True,(0,255,0),3, cv2.LINE_AA)
+    cv2.polylines(canvas,[np.int32(dst)],True,(0,255,0),3, cv2.LINE_AA)
     # i = 0
     # while kpts2[i]:
     #     if is_in_box(kpts2[i], dst):
@@ -79,12 +80,12 @@ while len(good)>MIN_MATCH_COUNT:
     cv2.fillPoly(gray2, a, 255)
     plt.imshow(gray2, cmap='gray')
     plt.show()
-    kpts2, descs2 = sift.detectAndCompute(gray2, None)
-    matches = matcher.knnMatch(descs1, descs2, 2)
-    # Sort by their distance.
-    matches = sorted(matches, key=lambda x: x[0].distance)
-    ## (6) Ratio test, to get good matches.
-    good = [m1 for (m1, m2) in matches if m1.distance < 0.7 * m2.distance]
+    # kpts2, descs2 = sift.detectAndCompute(gray2, None)
+    # matches = matcher.knnMatch(descs1, descs2, 2)
+    # # Sort by their distance.
+    # matches = sorted(matches, key=lambda x: x[0].distance)
+    # ## (6) Ratio test, to get good matches.
+    # good = [m1 for (m1, m2) in matches if m1.distance < 0.7 * m2.distance]
 
 
 ## (8) drawMatches
