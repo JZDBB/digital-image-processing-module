@@ -9,8 +9,15 @@ import cv2
 import numpy as np
 MIN_MATCH_COUNT = 4
 
-def is_in_box()
+def is_in_box(axis, box):
+    flag = False
+    x0, y0 = box[0][0]
+    x1, y1 = box[2][0]
 
+    if axis.pt[0] > x0 and axis.pt[0] < x1:
+        if axis.pt[1] > y0 and axis.pt[1] < y1:
+            flag = True
+    return flag
 
 imgname1 = "temple.jpg"
 imgname2 = "test.jpg"
@@ -60,7 +67,12 @@ while len(good)>MIN_MATCH_COUNT:
     ## 绘制边框
     # cv2.polylines(canvas,[np.int32(dst)],True,(0,255,0),3, cv2.LINE_AA)
     i = 0
-    while is_in_box(kpts2[i], dst)
+    while kpts2[i]:
+        if is_in_box(kpts2[i], dst):
+            del kpts2[i]
+            descs2 = np.delete(descs2, i, 0)
+            continue
+        i = i + 1
 
 
 
