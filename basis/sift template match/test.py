@@ -21,7 +21,7 @@ def is_in_box(axis, box):
     return flag
 
 imgname1 = "template1.jpg"
-imgname2 = "test1.jpg"
+imgname2 = "test.jpg"
 
 ## (1) prepare data
 img1 = cv2.imread(imgname1)
