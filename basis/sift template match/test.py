@@ -8,7 +8,12 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
-MIN_MATCH_COUNT = 15
+MIN_MATCH_COUNT = 4
+
+# def shape_affine(object, ):
+
+
+
 
 def is_in_box(axis, box):
     flag = False
@@ -22,12 +27,15 @@ def is_in_box(axis, box):
 
 imgname1 = "template1.jpg"
 imgname2 = "test.jpg"
+imgname3 = "template1_1.jpg"
 
 ## (1) prepare data
 img1 = cv2.imread(imgname1)
 img2 = cv2.imread(imgname2)
+img3 = cv2.imread(imgname3)
 gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
 gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+gray3 = cv2.cvtColor(img3, cv2.COLOR_BGR2GRAY)
 
 
 ## (2) Create SIFT object
@@ -39,6 +47,7 @@ matcher = cv2.FlannBasedMatcher(dict(algorithm = 1, trees = 5), {})
 ## (4) Detect keypoints and compute keypointer descriptors
 kpts1, descs1 = sift.detectAndCompute(gray1,None)
 kpts2, descs2 = sift.detectAndCompute(gray2,None)
+kpts3, descs3 = sift.detectAndCompute(gray3,None)
 
 ## (5) knnMatch to get Top2
 matches = matcher.knnMatch(descs1, descs2, 2)
@@ -63,44 +72,32 @@ if len(good)>MIN_MATCH_COUNT:
     ## 掩模，用作绘制计算单应性矩阵时用到的点对
     #matchesMask2 = mask.ravel().tolist()
     ## 计算图1的畸变，也就是在图2中的对应的位置。
-    h,w = img1.shape[:2]
+    h, w = img1.shape[:2]
     pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+
     dst = cv2.perspectiveTransform(pts,M)
-    ## 绘制边框
-    cv2.polylines(canvas,[np.int32(dst)],True,(0,255,0),3, cv2.LINE_AA)
-    # i = 0
-    # while kpts2[i]:
-    #     if is_in_box(kpts2[i], dst):
-    #         del kpts2[i]
-    #         descs2 = np.delete(descs2, i, 0)
-    #         continue
-    #     i = i + 1
-
-    a = np.array([[[dst[0][0][0], dst[0][0][1]], [dst[2][0][0] + w, dst[0][0][1]], [dst[2][0][0] + w, dst[2][0][1] + h], [dst[0][0][0], dst[2][0][1] + h]]], dtype=np.int32)
-    cv2.fillPoly(gray2, a, 255)
-    plt.imshow(gray2, cmap='gray')
+    print(dst)
+    found = gray2[np.int(np.min(dst[:, :, 1])):np.int(np.max(dst[:, :, 1])), np.int(np.min(dst[:, :, 0])):np.int(np.max(dst[:, :, 0]))]
+    plt.imshow(found, cmap='gray')
     plt.show()
-    # kpts2, descs2 = sift.detectAndCompute(gray2, None)
-    # matches = matcher.knnMatch(descs1, descs2, 2)
-    # # Sort by their distance.
-    # matches = sorted(matches, key=lambda x: x[0].distance)
-    # ## (6) Ratio test, to get good matches.
-    # good = [m1 for (m1, m2) in matches if m1.distance < 0.7 * m2.distance]
 
 
-## (8) drawMatches
-matched = cv2.drawMatches(img1,kpts1,canvas,kpts2,good,None)#,**draw_params)
+    cv2.polylines(canvas,[np.int32(dst)],True,(0,255,0),3, cv2.LINE_AA)
 
-## (9) Crop the matched region from scene
-h,w = img1.shape[:2]
-pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-dst = cv2.perspectiveTransform(pts,M)
-perspectiveM = cv2.getPerspectiveTransform(np.float32(dst),pts)
-found = cv2.warpPerspective(img2,perspectiveM,(w,h))
 
-## (10) save and display
-cv2.imwrite("matched.png", matched)
-cv2.imwrite("found.png", found)
-cv2.imshow("matched", matched)
-cv2.imshow("found", found)
-cv2.waitKey();cv2.destroyAllWindows()
+    ## (8) drawMatches
+    matched = cv2.drawMatches(img1,kpts1,canvas,kpts2,good,None)#,**draw_params)
+
+    ## (9) Crop the matched region from scene
+    # h,w = img1.shape[:2]
+    # pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+    # dst = cv2.perspectiveTransform(pts,M)
+    perspectiveM = cv2.getPerspectiveTransform(np.float32(dst),pts)
+    found = cv2.warpPerspective(img2,perspectiveM,(w,h))
+
+    ## (10) save and display
+    cv2.imwrite("matched.png", canvas)
+    cv2.imwrite("found.png", found)
+    cv2.imshow("matched", matched)
+    cv2.imshow("found", found)
+    cv2.waitKey();cv2.destroyAllWindows()
