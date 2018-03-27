@@ -1,4 +1,6 @@
-import cv2
-import matplotlib.pyplot as plt
 
-img = cv2.imread()
+from numpy import *
+
+a1=mat(eye(2,2)*0.5)
+a2=a1.I
+print(a2)

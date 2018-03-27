@@ -6,6 +6,7 @@
 """
 
 import cv2
+from numpy import *
 import numpy as np
 from matplotlib import pyplot as plt
 MIN_MATCH_COUNT = 4
@@ -25,8 +26,8 @@ def is_in_box(axis, box):
             flag = True
     return flag
 
-imgname1 = "template1.jpg"
-imgname2 = "test.jpg"
+imgname1 = "temple_last.jpg"
+imgname2 = "606.jpg"
 imgname3 = "template1_1.jpg"
 
 ## (1) prepare data
@@ -74,15 +75,32 @@ if len(good)>MIN_MATCH_COUNT:
     ## 计算图1的畸变，也就是在图2中的对应的位置。
     h, w = img1.shape[:2]
     pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-
     dst = cv2.perspectiveTransform(pts,M)
     print(dst)
-    found = gray2[np.int(np.min(dst[:, :, 1])):np.int(np.max(dst[:, :, 1])), np.int(np.min(dst[:, :, 0])):np.int(np.max(dst[:, :, 0]))]
-    plt.imshow(found, cmap='gray')
-    plt.show()
+    # found = gray2[np.int(np.min(dst[:, :, 1])):np.int(np.max(dst[:, :, 1])), np.int(np.min(dst[:, :, 0])):np.int(np.max(dst[:, :, 0]))]
+    # plt.imshow(found, cmap='gray')
+    # plt.show()
+    A = mat([[393, 212, 1],
+             [393, 313, 1],
+             [784, 313, 1]])
+    B = mat([[np.float(dst[0][0][0]), np.float(dst[0][0][1])],
+             [np.float(dst[1][0][0]), np.float(dst[1][0][1])],
+             [np.float(dst[2][0][0]), np.float(dst[2][0][1])]])
+    X = (A.I)*B
+    A1 = mat([[0, 0, 1],
+              [0, 884, 1],
+              [1168, 884, 1],
+              [1168, 0, 1]])
+    result = A1*X
 
+    pt1 = list([[result[0][:,0].max(), result[0][:,1].max()]])
+    pt2 = list([[result[1][:,0].max(), result[1][:,1].max()]])
+    pt3 = list([[result[2][:,0].max(), result[2][:,1].max()]])
+    pt4 = list([[result[3][:,0].max(), result[3][:,1].max()]])
+    dst_result = array([pt1, pt2, pt3, pt4])
+    print(dst_result)
 
-    cv2.polylines(canvas,[np.int32(dst)],True,(0,255,0),3, cv2.LINE_AA)
+    cv2.polylines(canvas,[np.int32(dst_result)],True,(0,255,0),3, cv2.LINE_AA)
 
 
     ## (8) drawMatches
