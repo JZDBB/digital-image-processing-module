@@ -9,7 +9,7 @@ import cv2
 from numpy import *
 import numpy as np
 from matplotlib import pyplot as plt
-MIN_MATCH_COUNT = 4
+MIN_MATCH_COUNT = 15
 
 # def shape_affine(object, ):
 
@@ -27,16 +27,13 @@ def is_in_box(axis, box):
     return flag
 
 imgname1 = "temple_last.jpg"
-imgname2 = "606.jpg"
-imgname3 = "template1_1.jpg"
+imgname2 = "test.jpg"
 
 ## (1) prepare data
 img1 = cv2.imread(imgname1)
 img2 = cv2.imread(imgname2)
-img3 = cv2.imread(imgname3)
 gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
 gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-gray3 = cv2.cvtColor(img3, cv2.COLOR_BGR2GRAY)
 
 
 ## (2) Create SIFT object
@@ -48,7 +45,6 @@ matcher = cv2.FlannBasedMatcher(dict(algorithm = 1, trees = 5), {})
 ## (4) Detect keypoints and compute keypointer descriptors
 kpts1, descs1 = sift.detectAndCompute(gray1,None)
 kpts2, descs2 = sift.detectAndCompute(gray2,None)
-kpts3, descs3 = sift.detectAndCompute(gray3,None)
 
 ## (5) knnMatch to get Top2
 matches = matcher.knnMatch(descs1, descs2, 2)
@@ -63,7 +59,7 @@ canvas = img2.copy()
 
 ## (7) find homography matrix
 ## 当有足够的健壮匹配点对（至少4个）时
-if len(good)>MIN_MATCH_COUNT:
+while len(good)>MIN_MATCH_COUNT:
     ## 从匹配中提取出对应点对
     ## (queryIndex for the small object, trainIndex for the scene )
     src_pts = np.float32([ kpts1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
@@ -101,21 +97,35 @@ if len(good)>MIN_MATCH_COUNT:
     print(dst_result)
 
     cv2.polylines(canvas,[np.int32(dst_result)],True,(0,255,0),3, cv2.LINE_AA)
+    cv2.fillPoly(gray2, [np.int32(dst_result)], 255)
+    plt.imshow(gray2)
+    plt.show()
+
+    kpts2, descs2 = sift.detectAndCompute(gray2,None)
+
+    ## (5) knnMatch to get Top2
+    matches = matcher.knnMatch(descs1, descs2, 2)
+    # Sort by their distance.
+    matches = sorted(matches, key = lambda x:x[0].distance)
+
+    ## (6) Ratio test, to get good matches.
+    good = [m1 for (m1, m2) in matches if m1.distance < 0.7 * m2.distance]
+    print(len(good))
 
 
-    ## (8) drawMatches
-    matched = cv2.drawMatches(img1,kpts1,canvas,kpts2,good,None)#,**draw_params)
+## (8) drawMatches
+matched = cv2.drawMatches(img1,kpts1,canvas,kpts2,good,None)#,**draw_params)
 
-    ## (9) Crop the matched region from scene
-    # h,w = img1.shape[:2]
-    # pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-    # dst = cv2.perspectiveTransform(pts,M)
-    perspectiveM = cv2.getPerspectiveTransform(np.float32(dst),pts)
-    found = cv2.warpPerspective(img2,perspectiveM,(w,h))
+## (9) Crop the matched region from scene
+# h,w = img1.shape[:2]
+# pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+# dst = cv2.perspectiveTransform(pts,M)
+perspectiveM = cv2.getPerspectiveTransform(np.float32(dst),pts)
+found = cv2.warpPerspective(img2,perspectiveM,(w,h))
 
-    ## (10) save and display
-    cv2.imwrite("matched.png", canvas)
-    cv2.imwrite("found.png", found)
-    cv2.imshow("matched", matched)
-    cv2.imshow("found", found)
-    cv2.waitKey();cv2.destroyAllWindows()
+## (10) save and display
+cv2.imwrite("matched.png", canvas)
+cv2.imwrite("found.png", found)
+cv2.imshow("matched", matched)
+cv2.imshow("found", found)
+cv2.waitKey();cv2.destroyAllWindows()
